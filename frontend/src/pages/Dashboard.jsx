@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { PlusCircle, Search, RefreshCw, Inbox } from "lucide-react";
+import { PlusCircle, Search, RefreshCw, Inbox, Download, ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,20 @@ import {
 import StatusBadge from "@/components/StatusBadge";
 import { listLeads, getStats } from "@/lib/api";
 import { STATUSES, shortId, timeAgo } from "@/lib/format";
+import { leadsToCsv, downloadCsv } from "@/lib/csv";
+
+const STATUS_RANK = { new: 0, contacted: 1, booked: 2, lost: 3 };
+
+const SORT_ACCESSORS = {
+  id: (l) => l.id,
+  business_name: (l) => l.business_name.toLowerCase(),
+  customer_name: (l) => l.customer_name.toLowerCase(),
+  customer_phone: (l) => l.customer_phone,
+  service_category: (l) => l.service_category.toLowerCase(),
+  customer_message: (l) => l.customer_message.toLowerCase(),
+  status: (l) => STATUS_RANK[l.status] ?? 99,
+  received_time: (l) => new Date(l.received_time).getTime(),
+};
 
 export default function Dashboard() {
   const [leads, setLeads] = useState([]);
@@ -21,6 +35,15 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [sort, setSort] = useState({ key: "received_time", dir: "desc" });
+
+  const toggleSort = (key) => {
+    setSort((cur) =>
+      cur.key === key
+        ? { key, dir: cur.dir === "asc" ? "desc" : "asc" }
+        : { key, dir: key === "received_time" ? "desc" : "asc" }
+    );
+  };
 
   const load = async () => {
     setLoading(true);
@@ -42,7 +65,7 @@ export default function Dashboard() {
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return leads.filter((l) => {
+    const rows = leads.filter((l) => {
       if (statusFilter !== "all" && l.status !== statusFilter) return false;
       if (!q) return true;
       return (
@@ -53,7 +76,27 @@ export default function Dashboard() {
         l.customer_message.toLowerCase().includes(q)
       );
     });
-  }, [leads, query, statusFilter]);
+    const accessor = SORT_ACCESSORS[sort.key] || SORT_ACCESSORS.received_time;
+    const dir = sort.dir === "asc" ? 1 : -1;
+    return [...rows].sort((a, b) => {
+      const av = accessor(a);
+      const bv = accessor(b);
+      if (av < bv) return -1 * dir;
+      if (av > bv) return 1 * dir;
+      return 0;
+    });
+  }, [leads, query, statusFilter, sort]);
+
+  const exportCsv = () => {
+    if (filtered.length === 0) {
+      toast.error("Nothing to export");
+      return;
+    }
+    const csv = leadsToCsv(filtered);
+    const stamp = new Date().toISOString().slice(0, 19).replaceAll(":", "-");
+    downloadCsv(`localops-leads-${stamp}.csv`, csv);
+    toast.success(`Exported ${filtered.length} lead${filtered.length === 1 ? "" : "s"}`);
+  };
 
   return (
     <div className="fade-up max-w-7xl mx-auto px-6 py-10" data-testid="dashboard-page">
@@ -71,6 +114,15 @@ export default function Dashboard() {
           </p>
         </div>
         <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            onClick={exportCsv}
+            data-testid="dashboard-export-csv-btn"
+            className="bg-transparent border-zinc-800 hover:bg-zinc-900 text-zinc-200 rounded-sm"
+          >
+            <Download className="w-4 h-4 mr-2" />
+            Export CSV
+          </Button>
           <Button
             variant="outline"
             onClick={load}
@@ -153,14 +205,14 @@ export default function Dashboard() {
             <table className="w-full text-sm">
               <thead className="bg-zinc-900 border-b border-zinc-800">
                 <tr className="text-xs uppercase tracking-widest text-zinc-500">
-                  <Th>Lead ID</Th>
-                  <Th>Business</Th>
-                  <Th>Customer</Th>
-                  <Th>Phone</Th>
-                  <Th>Service</Th>
-                  <Th>Message</Th>
-                  <Th>Status</Th>
-                  <Th>Received</Th>
+                  <SortableTh sort={sort} k="id" onClick={toggleSort}>Lead ID</SortableTh>
+                  <SortableTh sort={sort} k="business_name" onClick={toggleSort}>Business</SortableTh>
+                  <SortableTh sort={sort} k="customer_name" onClick={toggleSort}>Customer</SortableTh>
+                  <SortableTh sort={sort} k="customer_phone" onClick={toggleSort}>Phone</SortableTh>
+                  <SortableTh sort={sort} k="service_category" onClick={toggleSort}>Service</SortableTh>
+                  <SortableTh sort={sort} k="customer_message" onClick={toggleSort}>Message</SortableTh>
+                  <SortableTh sort={sort} k="status" onClick={toggleSort}>Status</SortableTh>
+                  <SortableTh sort={sort} k="received_time" onClick={toggleSort}>Received</SortableTh>
                 </tr>
               </thead>
               <tbody>
@@ -246,6 +298,26 @@ const StatCard = ({ label, value, accent, testid }) => (
 const Th = ({ children }) => (
   <th className="px-4 py-3 text-left font-semibold">{children}</th>
 );
+
+const SortableTh = ({ children, k, sort, onClick }) => {
+  const active = sort.key === k;
+  const Icon = !active ? ArrowUpDown : sort.dir === "asc" ? ArrowUp : ArrowDown;
+  return (
+    <th className="px-4 py-3 text-left font-semibold">
+      <button
+        type="button"
+        onClick={() => onClick(k)}
+        data-testid={`sort-${k}`}
+        className={`flex items-center gap-1.5 uppercase tracking-widest text-xs transition-colors ${
+          active ? "text-orange-500" : "text-zinc-500 hover:text-zinc-200"
+        }`}
+      >
+        {children}
+        <Icon className="w-3 h-3" />
+      </button>
+    </th>
+  );
+};
 const Td = ({ children, className = "" }) => (
   <td className={`px-4 py-4 ${className}`}>{children}</td>
 );

@@ -15,3 +15,7 @@ export const updateLeadStatus = (id, status) =>
   api.patch(`/leads/${id}/status`, { status }).then((r) => r.data);
 export const deleteLead = (id) => api.delete(`/leads/${id}`).then((r) => r.data);
 export const getStats = () => api.get("/stats").then((r) => r.data);
+export const addNote = (id, body) =>
+  api.post(`/leads/${id}/notes`, { body }).then((r) => r.data);
+export const deleteNote = (id, noteId) =>
+  api.delete(`/leads/${id}/notes/${noteId}`).then((r) => r.data);

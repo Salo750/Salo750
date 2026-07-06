@@ -1,0 +1,26 @@
+{
+  "summary": "Verified iteration 2 P1 features: sortable dashboard columns, CSV export (with empty-state toast), and per-lead activity notes (add/delete/persist/shortcut). Backend endpoints (POST/DELETE notes, 400 on empty, 404 on missing lead) all pass via curl. Frontend flow passes end-to-end.",
+  "tested_scope": ["frontend", "backend", "integration"],
+  "passed": [
+    "GET /api/leads returns leads with `notes` array field",
+    "POST /api/leads/{id}/notes with valid body returns 200 and appends note",
+    "POST /api/leads/{id}/notes with whitespace-only body returns 400",
+    "DELETE /api/leads/{id}/notes/{note_id} returns 200 and removes note",
+    "POST /api/leads/{nonexistent}/notes returns 404",
+    "Dashboard loads with export CSV button and sortable headers",
+    "Sortable column business_name: asc/desc toggle works and rows reorder correctly",
+    "CSV export downloads with exact expected header order: lead_id,business_name,customer_name,customer_phone,service_category,lead_source,status,received_time,customer_message,notes_count",
+    "CSV export row count matches visible leads (5 rows for unfiltered)",
+    "Empty search filter yields no download and shows 'Nothing to export' toast",
+    "Lead Detail notes-panel visible; submit button disabled on empty input",
+    "Adding a note via click works and appears in notes-list; notes-count updates",
+    "Ctrl+Enter shortcut submits a note from the textarea",
+    "Note delete via hover-revealed trash icon (force click) removes the note and decrements notes-count",
+    "Notes persist after page reload"
+  ],
+  "failed": [],
+  "action_items": [],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "retest_needed": false,
+  "full_testing_deferred": true
+}

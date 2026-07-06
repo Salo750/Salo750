@@ -26,6 +26,12 @@ LeadStatus = Literal["new", "contacted", "booked", "lost"]
 
 
 # ---------- Models ----------
+class Note(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    body: str
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
 class Lead(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
@@ -38,6 +44,7 @@ class Lead(BaseModel):
     lead_source: str
     status: LeadStatus = "new"
     received_time: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    notes: List[Note] = Field(default_factory=list)
 
 
 class LeadCreate(BaseModel):
@@ -53,11 +60,18 @@ class LeadStatusUpdate(BaseModel):
     status: LeadStatus
 
 
+class NoteCreate(BaseModel):
+    body: str
+
+
 # ---------- Helpers ----------
 def _serialize(lead_doc: dict) -> dict:
-    """Convert stored ISO datetime string back to datetime for Pydantic."""
+    """Convert stored ISO datetime strings back to datetime for Pydantic."""
     if isinstance(lead_doc.get("received_time"), str):
         lead_doc["received_time"] = datetime.fromisoformat(lead_doc["received_time"])
+    for n in lead_doc.get("notes", []) or []:
+        if isinstance(n.get("created_at"), str):
+            n["created_at"] = datetime.fromisoformat(n["created_at"])
     return lead_doc
 
 
@@ -178,6 +192,38 @@ async def delete_lead(lead_id: str):
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Lead not found")
     return {"ok": True}
+
+
+@api_router.post("/leads/{lead_id}/notes", response_model=Lead)
+async def add_note(lead_id: str, payload: NoteCreate):
+    body = payload.body.strip()
+    if not body:
+        raise HTTPException(status_code=400, detail="Note body cannot be empty")
+    note = Note(body=body)
+    note_doc = note.model_dump()
+    note_doc["created_at"] = note_doc["created_at"].isoformat()
+    result = await db.leads.find_one_and_update(
+        {"id": lead_id},
+        {"$push": {"notes": note_doc}},
+        return_document=True,
+        projection={"_id": 0},
+    )
+    if not result:
+        raise HTTPException(status_code=404, detail="Lead not found")
+    return _serialize(result)
+
+
+@api_router.delete("/leads/{lead_id}/notes/{note_id}", response_model=Lead)
+async def delete_note(lead_id: str, note_id: str):
+    result = await db.leads.find_one_and_update(
+        {"id": lead_id},
+        {"$pull": {"notes": {"id": note_id}}},
+        return_document=True,
+        projection={"_id": 0},
+    )
+    if not result:
+        raise HTTPException(status_code=404, detail="Lead not found")
+    return _serialize(result)
 
 
 @api_router.get("/stats")

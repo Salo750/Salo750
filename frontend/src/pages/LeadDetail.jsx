@@ -12,6 +12,9 @@ import {
   Radio,
   Clock,
   CheckCircle2,
+  StickyNote,
+  Send,
+  Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -35,7 +38,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import StatusBadge from "@/components/StatusBadge";
-import { getLead, updateLeadStatus, deleteLead } from "@/lib/api";
+import { getLead, updateLeadStatus, deleteLead, addNote, deleteNote } from "@/lib/api";
 import { STATUSES, shortId, timeAgo } from "@/lib/format";
 import { TEMPLATES, renderTemplate } from "@/lib/templates";
 
@@ -47,6 +50,8 @@ export default function LeadDetail() {
   const [templateId, setTemplateId] = useState(TEMPLATES[0].id);
   const [message, setMessage] = useState("");
   const [statusSaving, setStatusSaving] = useState(false);
+  const [noteDraft, setNoteDraft] = useState("");
+  const [noteSaving, setNoteSaving] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -113,6 +118,34 @@ export default function LeadDetail() {
     } catch (e) {
       console.error(e);
       toast.error("Failed to delete");
+    }
+  };
+
+  const submitNote = async () => {
+    const body = noteDraft.trim();
+    if (!body) return;
+    setNoteSaving(true);
+    try {
+      const updated = await addNote(lead.id, body);
+      setLead(updated);
+      setNoteDraft("");
+      toast.success("Note added");
+    } catch (e) {
+      console.error(e);
+      toast.error("Could not add note");
+    } finally {
+      setNoteSaving(false);
+    }
+  };
+
+  const removeNote = async (noteId) => {
+    try {
+      const updated = await deleteNote(lead.id, noteId);
+      setLead(updated);
+      toast.success("Note deleted");
+    } catch (e) {
+      console.error(e);
+      toast.error("Could not delete note");
     }
   };
 
@@ -367,6 +400,92 @@ export default function LeadDetail() {
             <span className="font-bold uppercase tracking-widest text-zinc-400">Demo note:</span>{" "}
             Messages are generated from templates and merged with lead data. Nothing is sent —
             copy the message and paste it into your own SMS or email client.
+          </div>
+
+          {/* ACTIVITY NOTES */}
+          <div
+            className="mt-6 border border-zinc-800 bg-zinc-900/40 rounded-sm p-6"
+            data-testid="notes-panel"
+          >
+            <div className="flex items-center gap-2 mb-4">
+              <StickyNote className="w-4 h-4 text-orange-500" />
+              <p className="text-[10px] font-bold uppercase tracking-widest text-orange-500">
+                /// Activity Notes
+              </p>
+              <span
+                data-testid="notes-count"
+                className="ml-auto text-[10px] font-bold uppercase tracking-widest text-zinc-500"
+              >
+                {(lead.notes || []).length} logged
+              </span>
+            </div>
+
+            <div className="flex gap-2 mb-4">
+              <Textarea
+                data-testid="note-input"
+                value={noteDraft}
+                onChange={(e) => setNoteDraft(e.target.value)}
+                placeholder="Left voicemail · Sent quote · Callback scheduled for Fri…"
+                className="min-h-[70px] bg-zinc-950 border-zinc-800 rounded-sm text-zinc-100 focus-visible:ring-1 focus-visible:ring-orange-500 focus-visible:border-orange-500 resize-y flex-1"
+                onKeyDown={(e) => {
+                  if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+                    e.preventDefault();
+                    submitNote();
+                  }
+                }}
+              />
+              <Button
+                onClick={submitNote}
+                disabled={noteSaving || !noteDraft.trim()}
+                data-testid="note-submit-btn"
+                className="bg-orange-500 hover:bg-orange-600 text-zinc-950 font-bold uppercase tracking-wider rounded-sm self-stretch px-4"
+              >
+                {noteSaving ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Send className="w-4 h-4" />
+                )}
+              </Button>
+            </div>
+
+            {(lead.notes || []).length === 0 ? (
+              <div
+                data-testid="notes-empty"
+                className="text-center text-xs uppercase tracking-widest text-zinc-600 border border-dashed border-zinc-800 rounded-sm py-6"
+              >
+                No notes yet. Log the first call, text, or callback.
+              </div>
+            ) : (
+              <ul className="space-y-2" data-testid="notes-list">
+                {[...(lead.notes || [])]
+                  .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+                  .map((n) => (
+                    <li
+                      key={n.id}
+                      data-testid={`note-item-${n.id}`}
+                      className="group border-l-2 border-orange-500/60 bg-zinc-950/60 rounded-sm p-3 flex items-start gap-3"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p className="text-zinc-200 leading-relaxed whitespace-pre-wrap break-words">
+                          {n.body}
+                        </p>
+                        <div className="mt-1 text-[10px] uppercase tracking-widest text-zinc-500">
+                          {timeAgo(n.created_at)} · {new Date(n.created_at).toLocaleString()}
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removeNote(n.id)}
+                        data-testid={`note-delete-${n.id}`}
+                        aria-label="Delete note"
+                        className="opacity-0 group-hover:opacity-100 text-zinc-500 hover:text-red-400 transition-opacity"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </li>
+                  ))}
+              </ul>
+            )}
           </div>
         </div>
       </div>

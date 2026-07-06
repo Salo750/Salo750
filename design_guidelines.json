@@ -1,0 +1,93 @@
+{
+  "theme": "dark",
+  "archetype": "Archetype 2: The Performance Pro (Industrial Contractor Adaptation)",
+  "colors": {
+    "primary": "#f97316",
+    "primary_hover": "#ea580c",
+    "background": "#09090b",
+    "surface": "#18181b",
+    "surface_hover": "#27272a",
+    "border": "#27272a",
+    "text_primary": "#fafafa",
+    "text_secondary": "#a1a1aa",
+    "status": {
+      "new": { "bg": "#06b6d41a", "text": "#22d3ee", "border": "#0891b2" },
+      "contacted": { "bg": "#eab3081a", "text": "#fde047", "border": "#ca8a04" },
+      "booked": { "bg": "#22c55e1a", "text": "#4ade80", "border": "#16a34a" },
+      "lost": { "bg": "#ef44441a", "text": "#f87171", "border": "#dc2626" }
+    }
+  },
+  "typography": {
+    "heading_font": "Barlow",
+    "body_font": "IBM Plex Sans",
+    "h1": "text-5xl sm:text-6xl font-black tracking-tighter uppercase",
+    "h2": "text-3xl sm:text-4xl font-bold tracking-tight uppercase",
+    "h3": "text-xl sm:text-2xl font-bold tracking-tight",
+    "body": "text-base font-normal leading-relaxed tracking-wide",
+    "small": "text-sm font-medium tracking-wide uppercase"
+  },
+  "layout": {
+    "spacing_scale": "generous",
+    "card_style": "bg-zinc-900 border border-zinc-800 rounded-sm p-6 shadow-sm",
+    "container_max_width": "max-w-7xl",
+    "borderRadius": "rounded-sm"
+  },
+  "components": {
+    "button_primary": "bg-[#f97316] text-[#09090b] hover:bg-[#ea580c] font-bold uppercase tracking-wider rounded-sm px-6 py-3 transition-colors",
+    "button_secondary": "bg-[#18181b] text-[#fafafa] hover:bg-[#27272a] font-bold uppercase tracking-wider border border-[#27272a] rounded-sm px-6 py-3 transition-colors",
+    "input": "bg-[#09090b] border border-[#27272a] rounded-sm focus:border-[#f97316] focus:ring-1 focus:ring-[#f97316] text-[#fafafa]",
+    "badge": "px-2.5 py-0.5 rounded-sm text-xs font-bold uppercase tracking-wider border",
+    "table": "w-full text-sm text-left text-[#a1a1aa] border-collapse",
+    "table_header": "text-xs text-[#a1a1aa] uppercase bg-[#18181b] border-b border-[#27272a]",
+    "table_row": "border-b border-[#27272a] hover:bg-[#27272a]/50 transition-colors"
+  },
+  "icons": {
+    "library": "@phosphor-icons/react",
+    "style": "weight='bold'"
+  },
+  "pages": {
+    "home": {
+      "layout": "Marketing single column",
+      "sections": [
+        "Hero: Full height, dark background with image overlay (bg-black/80), massive H1, Primary CTA to App.",
+        "Features: 3-column grid explaining lead capture, tracking, and fast follow-up."
+      ]
+    },
+    "lead_capture": {
+      "layout": "Centered form container on a dark background",
+      "description": "Public-facing form for leads to submit details."
+    },
+    "dashboard": {
+      "layout": "Sidebar navigation + Main content area",
+      "description": "Pre-seeded with 3-5 leads. Table view of leads with status badges."
+    },
+    "lead_detail": {
+      "layout": "2-column split (Content + Action)",
+      "description": "Left: Lead details and history. Right: Template-based message generator (Select template, edit, copy)."
+    }
+  },
+  "media": {
+    "hero_image": "https://images.unsplash.com/photo-1775396042188-64ec280ca175?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2Njl8MHwxfHNlYXJjaHwxfHxjb25zdHJ1Y3Rpb24lMjB0b29scyUyMGRhcmt8ZW58MHx8fHwxNzgzMjk5MjI4fDA&ixlib=rb-4.1.0&q=85",
+    "contractor_portrait": "https://images.unsplash.com/photo-1543357644-160b53c087e8?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NTJ8MHwxfHNlYXJjaHwyfHxjb250cmFjdG9yJTIwZGFyayUyMHBvcnRyYWl0fGVufDB8fHx8MTc4MzI5OTIyOHww&ixlib=rb-4.1.0&q=85"
+  },
+  "motion": {
+    "hover": "transition-all duration-200 ease-in-out",
+    "active": "active:scale-95",
+    "page_transition": "animate-in fade-in slide-in-from-bottom-4 duration-300"
+  },
+  "accessibility": {
+    "contrast_strategy": "High contrast white text on dark zinc backgrounds. Accent colors tested for WCAG AA.",
+    "testing_attributes": "All interactive elements must use data-testid."
+  },
+  "instructions_to_main_agent": [
+    "This project uses .js/.jsx files. Do NOT use TypeScript (.tsx/.ts).",
+    "Install specific fonts via Google Fonts in index.css: Barlow and IBM Plex Sans.",
+    "Install @phosphor-icons/react for icons.",
+    "Enforce dark mode permanently (e.g., set <html class='dark'>). Avoid light mode. The entire app is dark theme.",
+    "Mock the 3-5 leads data in a centralized store or context. Include Business name, Customer name, Phone, Service category, Message, Status, Received time.",
+    "Implement template-based message generator (no AI). Provide a dropdown of 3 templates (e.g., 'Standard Follow-up', 'Busy - Call later', 'Quote Ready'). Selecting one fills a textarea with placeholders replaced by lead data.",
+    "Strictly follow the color palette provided in Tailwind classes (e.g., text-orange-500, bg-zinc-950).",
+    "Use custom Shadcn components styled with sharp borders (rounded-sm) and the defined input styles.",
+    "Add data-testid attributes to ALL buttons, inputs, links, and actionable elements."
+  ]
+}

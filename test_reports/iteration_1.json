@@ -1,0 +1,32 @@
+{
+  "summary": "First-finish smoke tests for LocalOps. Backend CRUD + stats verified via curl; frontend flows verified via Playwright: Home hero + CTAs, Dashboard load/table/stats/search/status-filter, Lead Detail nav, template switch (Standard/Busy/QuoteReady/SameDay have IDs standard|busy_callback|quote_ready|same_day), regenerate, copy button, status change via both pipeline step buttons and the Radix Select dropdown, reload persistence, delete with confirm dialog, Capture empty-submit validation (no POST fired), Capture valid-submit navigates to /leads/:id with new lead visible. All flows working.",
+  "tested_scope": ["frontend", "backend", "integration"],
+  "passed": [
+    "GET /api/leads returns 5 seeded leads",
+    "GET /api/stats returns {new:2, contacted:1, booked:1, lost:1, total:5}",
+    "POST /api/leads creates lead with server-generated id + received_time",
+    "GET /api/leads/{id} returns created lead",
+    "PATCH /api/leads/{id}/status updates status to 'contacted'",
+    "DELETE /api/leads/{id} returns {ok:true}; refetch returns 404",
+    "Home hero title 'Recover missed contractor leads before they go cold.' visible with both CTAs",
+    "Dashboard loads with leads-table and 5 rows; stats card shows Total 5",
+    "Search filter 'Sandra' narrows to 1 row",
+    "Status filter dropdown filters to 'new' status (2 rows)",
+    "Lead-link navigates to /leads/:id and lead-detail-page renders",
+    "Template select switches textarea content (busy_callback tested)",
+    "Regenerate button refills textarea from selected template",
+    "Copy button clickable without crash",
+    "Pipeline step (status-step-contacted) updates status via PATCH; persists after page reload",
+    "Radix status Select changes status to 'booked'",
+    "Delete flow: dialog opens, confirm deletes, navigates back to /dashboard, lead absent",
+    "Capture empty submit shows validation, no POST fired, stays on /capture",
+    "Capture valid submit POSTs to /api/leads and navigates to new /leads/:id"
+  ],
+  "failed": [],
+  "action_items": [
+    "Minor note: template IDs in code are 'standard', 'busy_callback', 'quote_ready', 'same_day' — the review request listed them as 'Busy' etc. Not a bug; documentation-only discrepancy."
+  ],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "retest_needed": false,
+  "full_testing_deferred": true
+}

@@ -35,13 +35,18 @@ Build LocalOps: an AI lead recovery web app for small contractors who miss calls
 - Full data-testid coverage on all interactive elements
 - Testing agent: **100% pass on backend + frontend**
 
+## What's Been Implemented (Iteration 2 — 2026-02-06)
+- **Sortable dashboard columns**: all 8 columns clickable; toggles asc/desc; visual arrow indicator
+- **CSV export**: `Export CSV` button downloads the currently filtered leads with RFC-4180 escaping; empty-state toast
+- **Per-lead activity notes**: `POST /api/leads/{id}/notes` and `DELETE /api/leads/{id}/notes/{note_id}`; new notes panel on Lead Detail with add, list (newest first), delete on hover, Ctrl/Cmd+Enter shortcut; notes persist and are returned in list endpoint
+- Testing agent iteration 2: **100% pass on backend + frontend**
+
 ## Prioritized Backlog
 
 ### P1 (next iteration)
-- Sort controls on dashboard table (received time, business, status)
-- Bulk actions (multi-select + mark contacted)
-- Lead notes / activity log per lead
-- Export leads to CSV
+- Bulk actions (multi-select + mark contacted / delete)
+- Column visibility toggle on dashboard
+- Duplicate/merge detection (same phone number)
 
 ### P2
 - Real AI-generated follow-ups (Claude Sonnet via Emergent Universal Key)
